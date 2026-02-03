@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+#fireworks {
+  background: transparent !important;
+  mix-blend-mode: screen;   /* helps fireworks look better too */
+}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Will You Be My Valentine? 💕</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(to bottom, #ffe6f2, #fff0f5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    img {
+      max-width: 280px;
+      margin-bottom: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(255, 105, 180, 0.4);
+    }
+
+    h1 {
+      color: #e91e63;
+      font-size: 3.2rem;
+      margin: 0 20px 40px;
+      text-align: center;
+      text-shadow: 0 2px 10px rgba(233, 30, 99, 0.3);
+    }
+
+    .buttons {
+      position: relative;
+      display: flex;
+      gap: 60px;
+    }
+
+    button {
+      font-size: 1.5rem;
+      padding: 16px 48px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+
+    #yes {
+      background: #ff4081;
+      color: white;
+    }
+
+    #yes:hover {
+      background: #f50057;
+      transform: scale(1.12);
+    }
+
+    #no {
+      background: #9e9e9e;
+      color: white;
+      position: relative; /* important for movement */
+      user-select: none;
+    }
+
+    #fireworks {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <img src="minion.jpg" alt="Happy Minion">
+
+  <h1>Will you be my Valentine? 💖</h1>
+
+  <div class="buttons">
+    <button id="yes">Yes!! 🥰</button>
+    <button id="no">No 😭</button>
+  </div>
+
+  <canvas id="fireworks"></canvas>
+
+  <script>
+    // === Moving "No" button ===
+    const noBtn = document.getElementById('no');
+
+    noBtn.addEventListener('mouseover', () => {
+      const maxX = window.innerWidth - noBtn.offsetWidth - 40;
+      const maxY = window.innerHeight - noBtn.offsetHeight - 40;
+
+      const newX = Math.random() * maxX;
+      const newY = Math.random() * maxY;
+
+      noBtn.style.position = 'absolute';
+      noBtn.style.left = newX + 'px';
+      noBtn.style.top  = newY + 'px';
+    });
+
+    // Prevent "No" from being clicked easily (optional extra evil mode)
+    noBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      alert("You almost got it... but nope! 😏 Try again~");
+    });
+
+
+    // === Simple canvas fireworks on "Yes" ===
+    const yesBtn = document.getElementById('yes');
+    const canvas = document.getElementById('fireworks');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    let particles = [];
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = Math.random() * 5 + 2;
+        this.speedX = Math.random() * 6 - 3;
+        this.speedY = Math.random() * -12 - 6; // mostly upward
+        this.gravity = 0.15;
+        this.alpha = 1;
+      }
+
+      update() {
+        this.speedY += this.gravity;
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= 0.008;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function createFirework() {
+      const colors = ['#ff0043', '#14ffec', '#ffea00', '#00ff9d', '#ff6e00', '#ff00e1'];
+      const centerX = Math.random() * canvas.width;
+      const centerY = Math.random() * (canvas.height * 0.6);
+
+      for (let i = 0; i < 60; i++) {
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        particles.push(new Particle(centerX, centerY, color));
+      }
+    }
+
+    function animate() {
+ctx.fillStyle = 'rgba(0,0,0,0.04)';   // ← make it MUCH lighter fade (was 0.08)
+
+      ctx.fillStyle = 'rgba(0,0,0,0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+        if (p.alpha <= 0) particles.splice(i, 1);
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    yesBtn.addEventListener('click', () => {
+      // You can add many explosions!
+      for (let i = 0; i < 8; i++) {
+        setTimeout(createFirework, i * 180);
+      }
+
+      // Optional: change page style
+      document.body.style.background = 'black';
+      document.querySelector('h1').innerHTML = "YESSSS!!! 💖🎉💥";
+      document.querySelector('h1').style.color = '#fff';
+      yesBtn.style.display = 'none';
+      noBtn.style.display = 'none';
+    });
+  </script>
+
+</body>
+</html>
