@@ -62,8 +62,20 @@
     #no {
       background: #9e9e9e;
       color: white;
-      position: relative;
-      user-select: none;
+    }
+
+    #no.disabled {
+      background: #757575;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    #sad-message {
+      margin-top: 20px;
+      font-size: 1.3rem;
+      color: #e91e63;
+      opacity: 0;
+      transition: opacity 0.8s;
     }
 
     #fireworks {
@@ -85,13 +97,141 @@
     <button id="no">No 😭</button>
   </div>
 
-  <!-- Canvas is HIDDEN by default -->
+  <div id="sad-message"></div>
+
+  <!-- Canvas hidden until Yes is clicked -->
   <canvas id="fireworks" style="display: none;"></canvas>
 
   <script>
-    // === Moving "No" button ===
+    // ────────────────────────────────────────────────
+    // Multi-stage "No" button guilt trip
+    // ────────────────────────────────────────────────
     const noBtn = document.getElementById('no');
+    const sadMessage = document.getElementById('sad-message');
 
-    noBtn.addEventListener('mouseover', () => {
-      const maxX = window.innerWidth - noBtn.offsetWidth - 40;
-      const max
+    let noClickCount = 0;
+
+    const noPhrases = [
+      "Are you sure? 😢",
+      "Really really sure? 💔",
+      "Please reconsider... 🥺",
+      "Okay... if you insist 😭"
+    ];
+
+    noBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // prevent any default behavior
+
+      noClickCount++;
+
+      if (noClickCount <= 3) {
+        // Change button text progressively
+        noBtn.textContent = noPhrases[noClickCount - 1];
+      }
+
+      if (noClickCount === 4) {
+        noBtn.textContent = "Okay... 😔";
+        noBtn.classList.add('disabled');
+        noBtn.disabled = true;
+
+        // Show tiny sad message
+        sadMessage.textContent = "(tears silently)";
+        sadMessage.style.opacity = '1';
+      }
+    });
+
+
+    // ────────────────────────────────────────────────
+    // Fireworks canvas setup (unchanged)
+    // ────────────────────────────────────────────────
+    const yesBtn  = document.getElementById('yes');
+    const canvas  = document.getElementById('fireworks');
+    const ctx     = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let particles = [];
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = Math.random() * 5 + 2;
+        this.speedX = Math.random() * 6 - 3;
+        this.speedY = Math.random() * -12 - 6;
+        this.gravity = 0.15;
+        this.alpha = 1;
+      }
+
+      update() {
+        this.speedY += this.gravity;
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= 0.008;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function createFirework() {
+      const colors = ['#ff0043', '#14ffec', '#ffea00', '#00ff9d', '#ff6e00', '#ff00e1'];
+      const cx = Math.random() * canvas.width;
+      const cy = Math.random() * (canvas.height * 0.65);
+
+      for (let i = 0; i < 60; i++) {
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        particles.push(new Particle(cx, cy, color));
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(0,0,0,0.03)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw();
+        if (p.alpha <= 0) particles.splice(i, 1);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    // ────────────────────────────────────────────────
+    // Yes button → fireworks + celebration
+    // ────────────────────────────────────────────────
+    yesBtn.addEventListener('click', () => {
+      canvas.style.display = 'block';
+
+      for (let i = 0; i < 9; i++) {
+        setTimeout(createFirework, i * 160);
+      }
+
+      document.body.style.background = '#000';
+      document.body.style.backgroundImage = 'none';
+      document.querySelector('h1').innerHTML = "YESSSS!!! 💖🎆💥";
+      document.querySelector('h1').style.color = '#fff';
+      yesBtn.style.display = 'none';
+      noBtn.style.display = 'none';
+      sadMessage.style.display = 'none';
+    });
+  </script>
+
+</body>
+</html>
